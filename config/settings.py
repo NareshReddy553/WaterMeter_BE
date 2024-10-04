@@ -96,6 +96,7 @@ NINJA_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
+AUTH_USER_MODEL = 'account.UserProfile'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

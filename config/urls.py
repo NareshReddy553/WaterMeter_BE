@@ -22,10 +22,17 @@ from django.urls import path
 from ninja_jwt.controller import NinjaJWTDefaultController
 from ninja_extra import NinjaExtraAPI
 
+from account.controllers.block import BlockController
+from account.controllers.community import CommunityController
+from account.controllers.flat import FlatController
+from account.controllers.users import UserController
+from watermeter.controller import MeterImageProcessController
+
+
 api_v1 = NinjaExtraAPI()
 
 api_v1.register_controllers(NinjaJWTDefaultController)
-# api_v1.register_controllers(DatabaseController, UserController,GroupController,PermissionController )
+api_v1.register_controllers(CommunityController ,UserController,BlockController,FlatController,MeterImageProcessController)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
