@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from ninja_schema import ModelSchema, model_validator
 
 from account.models import UserProfile
+from account.schema.community_schema import CommunityOutSchema
 
 UserModel = get_user_model()
 
@@ -18,43 +19,35 @@ from pydantic import EmailStr
 from typing import Optional
 
 class UserCreateSchema(Schema):
-    username: str
     password:str
     confirm_password: str
     email: EmailStr
     first_name: str
     last_name: Optional[str] = None
     phone_number: Optional[str] = None
-    is_community_owner: bool = False
-    is_community_member: bool = False
-    is_community_customer: bool = False
+    user_type:Optional[str]=None
     community_id: int 
-    block_id:Optional[int]
-    flat_id:Optional[int]
+    block_id:Optional[int]=None
+    flat_id:Optional[int]=None
 
 class UserProfileUpdateSchema(Schema):
     first_name: Optional[str]
     last_name: Optional[str]
     phone_number: Optional[str]
     is_active: Optional[bool] = True
-    is_community_owner: Optional[bool] = False
-    is_community_member: Optional[bool] = False
-    is_community_customer: Optional[bool] = False
+    user_type:Optional[str]=None
     community_id: Optional[int]
 
 
 class UserProfileResponseSchema(Schema):
     user_id: int
-    username: str
     email: EmailStr
     first_name: str
     last_name: Optional[str] = None
     phone_number: Optional[str] = None
     is_active: bool
-    is_community_owner: bool
-    is_community_member: bool
-    is_community_customer: bool
-    community: Optional[int]
+    user_type:Optional[str]=None
+    community: Optional[CommunityOutSchema]
 
 # class UserCreateSchema(ModelSchema):
 #     confirm_password: str
@@ -127,10 +120,14 @@ class PermissionUpdateSchema(Schema):
     content_type_id: int
     
 class UserRoleAssignSchema(Schema):
-    user_id: int
-    role_ids: List[int]
+    roles: List[int]
     
     
+class GroupPermissionCreateschema(Schema):
+    group_id:int
+    permission_id:List[int]
     
-
+class GroupPermissionResponseSchema(Schema):
+    group: GroupSchema
+    permissions: List[PermissionSchema]
 

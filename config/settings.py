@@ -90,7 +90,7 @@ DATABASES = {
 AUTH_TOKEN_CLASSES=["account.backends.AccountJWTAuthentication"]
 
 NINJA_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'USER_ID_FIELD': 'user_id',
     'USER_ID_CLAIM': 'user_id',

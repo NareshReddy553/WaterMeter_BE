@@ -16,24 +16,37 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-from django.contrib import admin
-from django.urls import path
 from ninja_jwt.controller import NinjaJWTDefaultController
 from ninja_extra import NinjaExtraAPI
 
 from account.controllers.block import BlockController
 from account.controllers.community import CommunityController
 from account.controllers.flat import FlatController
-from account.controllers.users import UserController
+from account.controllers.users import (
+    GroupController, 
+    GroupPermissionController, 
+    PermissionController, 
+    UserController
+)
 from watermeter.controller import MeterImageProcessController
 
-
+# Initialize API instance
 api_v1 = NinjaExtraAPI()
 
-api_v1.register_controllers(NinjaJWTDefaultController)
-api_v1.register_controllers(CommunityController ,UserController,BlockController,FlatController,MeterImageProcessController)
+# Register controllers
+api_v1.register_controllers(
+    NinjaJWTDefaultController,
+    CommunityController,
+    UserController,
+    GroupController,
+    PermissionController,
+    GroupPermissionController,
+    BlockController,
+    FlatController,
+    MeterImageProcessController,
+)
 
+# URL patterns
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/v1/", api_v1.urls),

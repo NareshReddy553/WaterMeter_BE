@@ -17,24 +17,27 @@ class Community(models.Model):
 
 
 class UserProfileManager(BaseUserManager):
-    def create_user(self, username, email, password=None, **extra_fields):
-        if not username:
-            raise ValueError('The Username field must be set')
+    def create_user(self, email, password=None, **extra_fields):
+        
         email = self.normalize_email(email)
-        user = self.model(username=username, email=email, **extra_fields)
+        user = self.model( email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, password=None, **extra_fields):
+    def create_superuser(self,  email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(username, email, password, **extra_fields)
+        return self.create_user( email, password, **extra_fields)
 
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
+    USER_TYPES_CHOICES = {
+        "CO": "Community Owner",
+        "MM": "Community Member",
+        "CC": "Community Customer"
+    }
     user_id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=128, unique=True)
     email = models.EmailField(max_length=128,unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50, blank=True, null=True)
@@ -43,38 +46,29 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     password = models.CharField(max_length=128, default=make_password(None))
-    last_login = models.DateTimeField(blank=True, null=True)
-    login_attempts = models.IntegerField(default=0)
-    lastlogin_datetime = models.DateTimeField(blank=True, null=True)
-    modify_datetime = models.DateTimeField(auto_now=True)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,blank=True,null=True)
-    is_community_owner=models.BooleanField(default=False)
-    is_community_member=models.BooleanField(default=False)
-    is_community_customer=models.BooleanField(default=False)
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='user_profiles',
-        blank=True
-    )
+    community = models.ForeignKey(Community, on_delete=models.DO_NOTHING,blank=True,null=True)
+    user_type=models.CharField(max_length=50, choices=USER_TYPES_CHOICES, blank=True,null=True)
     
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='user_profiles',
-        blank=True
-    )
+    created_datetime= models.DateTimeField(auto_now_add=True)
+    modify_datetime = models.DateTimeField(auto_now=True)
+    
 
     objects = UserProfileManager()
-
-    USERNAME_FIELD = 'username'
-    EMAIL_FIELD = 'email'
-    REQUIRED_FIELDS = ['email', 'first_name']
+    USERNAME_FIELD = 'email'  # Change this to email
+    REQUIRED_FIELDS = ['first_name']
+    
 
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
 
-    def __str__(self):
-        return self.username
+    class Meta:
+        permissions = [
+            ("add_user_group", "Can add User to Group"),
+            ("delete_user_group", "Can delete the User Group"),
+            ("add_user_permissions", "Can add the User permissions"),
+            ("get_user_permissions", "Can get the User permissions"),
+        ]
 
 
 # Block Model
@@ -82,6 +76,9 @@ class Block(models.Model):
     block_name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    created_datetime= models.DateTimeField(auto_now_add=True)
+    modify_datetime = models.DateTimeField(auto_now=True)
+    
 
     class Meta:
         unique_together = ('block_name', 'community')
@@ -96,6 +93,9 @@ class Flat(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)  # The owner/tenant
     meter_no = models.CharField(max_length=100, unique=True)
+    created_datetime= models.DateTimeField(auto_now_add=True)
+    modify_datetime = models.DateTimeField(auto_now=True)
+    
 
     class Meta:
         unique_together = ('flat_number', 'block')

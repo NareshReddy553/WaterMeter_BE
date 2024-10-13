@@ -10,3 +10,7 @@ class waterMeterProcessResponseSchema(Schema):
     serial_number: str
     flat: Optional[FlatResponseSchema] = None
     user:Optional[UserProfileResponseSchema]=None
+    
+class CreateWaterMeterSchema(Schema):
+    flat_id:int
+    kiloliters:int

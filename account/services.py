@@ -3,6 +3,7 @@ from typing import List
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja.errors import ValidationError
+from django.contrib.auth.models import Group
 
 from account.schema.block_schema import BlockCreateSchema, BlockUpdateSchema
 from account.schema.flat_schema import FlatCreateSchema, FlatUpdateSchema
@@ -24,30 +25,26 @@ class UserService:
 
         user = UserProfile.objects.create_user(
             email=user_data.get('email', ''),
-            username=user_data.get('username', ''),
             first_name=user_data.get('first_name', ''),
             last_name=user_data.get('last_name', ''),
             phone_number=user_data.get('phone_number', ''),
             password=user_data.get('password', ''),
             is_active=user_data.get('is_active', True),
-            is_community_owner=user_data.get('is_community_owner',False),
-            is_community_member=user_data.get('is_community_member',False),
-            is_community_customer=user_data.get('is_community_customer',False),
+            user_type=user_data.get('user_type',''),
             community_id=user_data.get('community_id')
         )
-        # Set and hash the password if provided
-        if password := user_data.get('password'):
-            user.set_password(password)
-            user.save()
         
         block_id=user_data.get("block_id")
         flat_id=user_data.get("flat_id")
         
         if block_id and flat_id:
-            flat = get_object_or_404(Flat, id=user_data.flat_id)
+            flat = get_object_or_404(Flat, id=flat_id)
             flat.block_id=block_id
             flat.user_id=user.pk
-        
+            flat.save()
+        # if user.is_community_owner:
+        #    group, created= Group.objects.get_or_create(name="Community Owner")
+       
         return user
 
     @staticmethod
