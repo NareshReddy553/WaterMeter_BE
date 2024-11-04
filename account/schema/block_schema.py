@@ -1,7 +1,11 @@
 from ninja import Schema
-from typing import Optional
+from typing import List, Optional
 
 from account.schema.community_schema import CommunityOutSchema
+
+class BlockWithFlatsSchema(Schema):
+    block_id: int
+    flats: List[int]
 
 # Create schema for Block
 class BlockCreateSchema(Schema):

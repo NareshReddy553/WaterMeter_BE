@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from ninja import UploadedFile
 import google.generativeai as genai
 
-from account.models import Flat
+from account.community_models import Flat
 
 
 def save_temp_image(self, image: UploadedFile) -> Path:

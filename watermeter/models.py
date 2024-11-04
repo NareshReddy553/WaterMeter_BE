@@ -1,6 +1,7 @@
 from django.db import models
 
-from account.models import Flat, UserProfile
+from account.models import  UserProfile
+from account.community_models import Flat
 
 
 

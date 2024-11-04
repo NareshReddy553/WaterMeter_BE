@@ -1,4 +1,5 @@
 # schemas.py
+from account.schema.block_schema import BlockWithFlatsSchema
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from ninja_schema import ModelSchema, model_validator
@@ -18,6 +19,12 @@ from ninja import Schema
 from pydantic import EmailStr
 from typing import Optional
 
+class CreateUserFlatSchema(Schema):
+    flat_id: int
+
+class CreateUserBlockSchema(Schema):
+    block_id: int
+    flats: List[CreateUserFlatSchema]
 class UserCreateSchema(Schema):
     password:str
     confirm_password: str
@@ -27,8 +34,8 @@ class UserCreateSchema(Schema):
     phone_number: Optional[str] = None
     user_type:Optional[str]=None
     community_id: int 
-    block_id:Optional[int]=None
-    flat_id:Optional[int]=None
+    blocks: Optional[List[CreateUserBlockSchema]] = None   # List of blocks with their associated flats
+    roles: Optional[List[int]] = None
 
 class UserProfileUpdateSchema(Schema):
     first_name: Optional[str]
@@ -130,4 +137,8 @@ class GroupPermissionCreateschema(Schema):
 class GroupPermissionResponseSchema(Schema):
     group: GroupSchema
     permissions: List[PermissionSchema]
+
+
+
+
 

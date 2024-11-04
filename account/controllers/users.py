@@ -1,3 +1,4 @@
+from account.schema.authUserSchemas import AuthUserWithRolesPermissionsSchema
 from ninja_extra import ControllerBase, api_controller, route
 from ninja_extra.permissions import IsAuthenticated, IsAdminUser
 # from account.backends import JWTAuth
@@ -31,27 +32,40 @@ from ninja_jwt.authentication import JWTAuth
 from django.contrib.auth.models import Group, Permission
 # from account.schemas import GroupSchema, PermissionSchema, UserUpdateSchema, GroupUpdateSchema, PermissionUpdateSchema
 from django.contrib.auth import get_user_model
+from ninja_extra.exceptions import PermissionDenied
 
 from account.models import UserProfile
 from account.permission import UserWithPermission
 from account.schema.user_schema import GroupPermissionCreateschema, GroupPermissionResponseSchema, GroupSchema, GroupUpdateSchema, PasswordUpdateSchema, PermissionSchema, PermissionUpdateSchema, UserCreateSchema, UserOutSchema, UserPermissionSchema, UserRoleAssignSchema, UserUpdateSchema
 from account.services import UserService
+from django.forms.models import model_to_dict
+from django.db.models import Q
 
 UserModel = get_user_model()
 
 @api_controller("/user",tags=["user"],permissions=[IsAuthenticated],auth=JWTAuth())
 class UserController:
     @route.post("", response={200: UserOutSchema, 400: dict}, url_name="create",permissions=[UserWithPermission('account.add_userprofile')])
-    def create_user(self, data: UserCreateSchema):
+    def create_user(self,request, data: UserCreateSchema):
         """
         Create a new user.
         """
         try:
             user = UserService.create_user(data)
-            return user
-        except ValidationError as ex:
-            return 400, dict(details=str(ex))
+            if request.user.is_superuser:
+                # Assign the community owner/admin role to the new user
+                admin_group, created = Group.objects.get_or_create(name='Community Admin') 
+                
+                # Assign all permissions to the admin group if it was just created
+                if created:
+                    all_permissions = Permission.objects.all()
+                    admin_group.permissions.set(all_permissions)
 
+                user.groups.add(admin_group)
+            return user
+        except Exception as e:
+            return 400, {"error": str(e)}
+        
     @route.get("", response=PageNumberPaginationExtra.get_response_schema(UserOutSchema), url_name="list",permissions=[UserWithPermission('account.view_userprofile')])
     @paginate(PageNumberPaginationExtra)
     def list_users(self):
@@ -69,6 +83,49 @@ class UserController:
         if not user:
             return 404, dict(details="User not found")
         return user
+    @route.get("/me", response={200: dict, 401: dict}, url_name="detail",permissions=[UserWithPermission('account.view_userprofile')])
+    def get_authenticated_user(self,request):
+        """
+        Get auth user details along with his roles and permissions.
+        """
+        if not request.user.is_authenticated:
+            return {"error": "User is not authenticated"}, 401
+
+        # Convert user model to dict
+        user = request.user
+        # Fetch community data
+        community_data = model_to_dict(user.community) if user.community else {}
+
+        # Fetch user roles and their permissions
+        roles = []
+        for group in request.user.groups.prefetch_related('permissions').all():
+            group_data = model_to_dict(group)  # Convert group model to dict
+            permissions = [model_to_dict(perm) for perm in group.permissions.all()]  # Convert permissions to dicts
+
+            roles.append({
+                **group_data,  # Include all group fields
+                "permissions": permissions  # Include permissions in the role
+            })
+
+        # Fetch user permissions (direct and role-based)
+        permissions = list(
+            Permission.objects.filter(
+                Q(user=request.user) | Q(group__user=request.user)
+            ).distinct().values()
+        )
+
+        # Combine everything into the final response
+        return {
+            "user_id":user.user_id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number":user.phone_number,
+            "is_active": user.is_active,
+            "community":community_data,
+            "roles": roles,
+            "permissions": permissions,
+        }
 
     @route.put("/{int:user_id}", response={200: UserOutSchema, 400: dict, 404: dict}, url_name="update",permissions=[UserWithPermission('account.change_userprofile')])
     def update_user(self, user_id: int, data: UserUpdateSchema):

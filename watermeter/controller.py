@@ -1,7 +1,6 @@
 import base64
 import io
 import json
-from langchain_google_genai import ChatGoogleGenerativeAI
 from ninja_extra import api_controller, route,status
 from ninja import File, UploadedFile
 import google.generativeai as genai

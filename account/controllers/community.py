@@ -21,7 +21,9 @@ from typing import List
 from django.db.models import Q
 from ninja.errors import ValidationError
 from ninja.errors import HttpError
+from ninja_extra.exceptions import PermissionDenied
 from ninja.responses import Response
+
 from account.models import   UserProfile
 # from .schema import (
 #     UserCreateSchema,
@@ -41,15 +43,18 @@ from django.shortcuts import get_object_or_404
 @api_controller("/community", tags=["Community"],permissions=[IsAuthenticated], auth=JWTAuth())
 class CommunityController:
     @route.post("", response={200: CommunityOutSchema, 400: dict}, url_name="create")
-    def create_community(self, data: CommunityCreateSchema):
+    def create_community(self,request, data: CommunityCreateSchema):
         """
         Create a new community.
         """
-        try:
-            community = Community.objects.create(**data.dict())
-            return community
-        except ValidationError as ex:
-            return 400, dict(details=str(ex))
+        if request.user.is_superuser:
+            try:
+                community = Community.objects.create(**data.dict())
+                return community
+            except ValidationError as ex:
+                return 400, dict(details=str(ex))
+        else:
+            raise PermissionDenied("You do not have permission to create a community.")
 
     @route.get("", response=PageNumberPaginationExtra.get_response_schema(CommunityOutSchema), url_name="list")
     @paginate(PageNumberPaginationExtra)
@@ -57,7 +62,7 @@ class CommunityController:
         """
         List all users.
         """
-        communities = Community.objects.all()
+        communities = Community.objects.filter(is_active=True)
         return communities
 
     @route.get("/{int:community_id}/", response=CommunityOutSchema, url_name="detail")
