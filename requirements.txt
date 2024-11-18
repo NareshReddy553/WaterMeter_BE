@@ -18,3 +18,4 @@ django-encrypted-model-fields==0.6.5
 psycopg2==2.9.9
 python-dotenv==1.0.1
 google-generativeai
+django-cors-headers==4.3.1
