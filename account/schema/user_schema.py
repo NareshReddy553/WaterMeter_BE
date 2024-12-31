@@ -36,6 +36,7 @@ class UserCreateSchema(Schema):
     community_id: int 
     blocks: Optional[List[CreateUserBlockSchema]] = None   # List of blocks with their associated flats
     roles: Optional[List[int]] = None
+    flats:Optional[List]=None
 
 class UserProfileUpdateSchema(Schema):
     first_name: Optional[str]

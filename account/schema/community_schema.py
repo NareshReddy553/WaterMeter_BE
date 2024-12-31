@@ -18,12 +18,16 @@ class CommunityCreateSchema(Schema):
     community_name: str = Field(..., max_length=255)
     address: str = Field(..., max_length=255)
     description: Optional[str] = None
+    latitude:Optional[float]=None
+    longitude:Optional[float]=None
 
 # Schema for updating a community (partial fields)
 class CommunityUpdateSchema(Schema):
     community_name: Optional[str] = Field(None, max_length=255)
     address: Optional[str] = Field(None, max_length=255)
     description: Optional[str] = None
+    latitude:Optional[float]=None
+    longitude:Optional[float]=None
 
 # Schema for output (response) representation
 class CommunityOutSchema(Schema):
@@ -31,3 +35,5 @@ class CommunityOutSchema(Schema):
     community_name: str
     address: str
     description: Optional[str] = None
+    latitude:Optional[float]=None
+    longitude:Optional[float]=None

@@ -6,11 +6,16 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
 
 
+from django.db import models
+from django.conf import settings
+
 # Community Model
 class Community(models.Model):
     community_name = models.CharField(max_length=255, unique=True)
     address = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)  # Latitude of the community
+    longitude = models.FloatField(blank=True, null=True)  # Longitude of the community
     created_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.DO_NOTHING,
@@ -31,6 +36,7 @@ class Community(models.Model):
 
     def __str__(self):
         return self.community_name
+
 
 
 

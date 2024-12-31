@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin,Permission
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
@@ -23,7 +23,11 @@ class UserProfileManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, **extra_fields)
+        user=self.create_user(email, password, **extra_fields)
+        if user.is_superuser:
+            all_permissions = Permission.objects.all()
+            user.user_permissions.set(all_permissions)
+        return user
 
 
 # UserProfile Model

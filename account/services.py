@@ -20,9 +20,8 @@ class UserService:
     def create_user(data: UserCreateSchema) -> UserProfile:
         # Convert the schema data to a dictionary and exclude unset fields
         user_data = data.model_dump(exclude_unset=True)
-        
         # Extract relevant fields
-        user_data.pop('blocks', None)  # Remove blocks_with_flats from user_data
+        flats=user_data.pop('flats',None)
         user_data.pop('confirm_password', None)
 
         
@@ -34,19 +33,32 @@ class UserService:
         # Create the user profile
         user = UserProfile.objects.create_user(**user_data, community=community)
 
-        # Validate and assign flats within the selected blocks if blocks are provided
-        if data.blocks:
-            for block_data in data.blocks:
-                # Validate if the block belongs to the community
-                block = get_object_or_404(Block, id=block_data.block_id, community=community)
-
-                for flat_data in block_data.flats:
-                    # Validate if the flat belongs to the block
-                    flat = get_object_or_404(Flat, id=flat_data.flat_id, block=block)
+        # "flats":[{"flat_id":[1],"block_id":1},{"flat_id":[1],"block_id":2}]
+        if flats:
+            for flat_data in flats:
+                for flat_id in flat_data['flat_id']:
+                    # Validate if the flat belongs to the community
+                    block=get_object_or_404(Block,id=flat_data['block_id'])
+                    flat = get_object_or_404(Flat, id=flat_id, community=community,block=block)
                     
                     # Assign the flat to the user
                     flat.user = user
                     flat.save()
+                
+
+        # Validate and assign flats within the selected blocks if blocks are provided
+        # if data.blocks:
+        #     for block_data in data.blocks:
+        #         # Validate if the block belongs to the community
+        #         block = get_object_or_404(Block, id=block_data.block_id, community=community)
+
+        #         for flat_data in block_data.flats:
+        #             # Validate if the flat belongs to the block
+        #             flat = get_object_or_404(Flat, id=flat_data.flat_id, block=block)
+                    
+        #             # Assign the flat to the user
+        #             flat.user = user
+        #             flat.save()
                     
         # Handle role assignments 
         assigned_roles = set()  # Keep track of roles to avoid duplicates           

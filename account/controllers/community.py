@@ -5,6 +5,7 @@ from ninja.errors import ValidationError
 
 # from account.permissions import UserWithPermission
 from account.models import Community
+from account.permission import UserWithPermission
 from account.schema.community_schema import CommunityCreateSchema, CommunityOutSchema, CommunityUpdateSchema
 
 
@@ -42,7 +43,7 @@ from django.shortcuts import get_object_or_404
 
 @api_controller("/community", tags=["Community"],permissions=[IsAuthenticated], auth=JWTAuth())
 class CommunityController:
-    @route.post("", response={200: CommunityOutSchema, 400: dict}, url_name="create")
+    @route.post("", response={200: CommunityOutSchema, 400: dict}, url_name="create",permissions=[UserWithPermission('account.add_community')])
     def create_community(self,request, data: CommunityCreateSchema):
         """
         Create a new community.
@@ -56,7 +57,7 @@ class CommunityController:
         else:
             raise PermissionDenied("You do not have permission to create a community.")
 
-    @route.get("", response=PageNumberPaginationExtra.get_response_schema(CommunityOutSchema), url_name="list")
+    @route.get("", response=PageNumberPaginationExtra.get_response_schema(CommunityOutSchema), url_name="list",permissions=[UserWithPermission('account.view_community')])
     @paginate(PageNumberPaginationExtra)
     def list_users(self):
         """
@@ -65,7 +66,7 @@ class CommunityController:
         communities = Community.objects.filter(is_active=True)
         return communities
 
-    @route.get("/{int:community_id}/", response=CommunityOutSchema, url_name="detail")
+    @route.get("/{int:community_id}/", response=CommunityOutSchema, url_name="detail",permissions=[UserWithPermission('account.view_community')])
     def retrieve_community(self, community_id : int):
         """
         Get specific users.
@@ -73,7 +74,7 @@ class CommunityController:
         community = get_object_or_404(Community, id=community_id)
         return community
 
-    @route.put("/{int:community_id}", response={200: CommunityOutSchema, 400: dict, 404: dict}, url_name="update",)
+    @route.put("/{int:community_id}", response={200: CommunityOutSchema, 400: dict, 404: dict}, url_name="update",permissions=[UserWithPermission('account.change_community')])
     def update_community(self, community_id: int, data: CommunityUpdateSchema):
         """
         Update an existing user.
@@ -87,7 +88,7 @@ class CommunityController:
         except ValidationError as ex:
             return 400, {"detail": str(ex)}
 
-    @route.delete("/{int:community_id}", url_name="destroy", response={204: dict})
+    @route.delete("/{int:community_id}", url_name="destroy", response={204: dict},permissions=[UserWithPermission('account.delete_community')])
     def delete_user(self, community_id: int):
         """
         Delete single user
